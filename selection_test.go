@@ -13,6 +13,20 @@ func (a testSlice) Len() int           { return len(a) }
 func (a testSlice) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a testSlice) Less(i, j int) bool { return a[i] < a[j] }
 
+var (
+	globalCaseMillion  testSlice
+	globalCaseThousand testSlice
+	globalCaseHundred  testSlice
+	globalCaseTens     testSlice
+)
+
+func init() {
+	globalCaseMillion = randomTestCase(1000000)
+	globalCaseThousand = randomTestCase(1000)
+	globalCaseHundred = randomTestCase(100)
+	globalCaseTens = randomTestCase(50)
+}
+
 func TestSelection(t *testing.T) {
 	s := testSlice{1, 2, 3, 4, 5}
 	index := Select(s, 3)
@@ -33,7 +47,19 @@ func TestSelectionWithDuplicate(t *testing.T) {
 }
 
 func TestSelectionWithRandomCase(t *testing.T) {
-	data := randomTestCase(100)
+	data := randomTestCase(1000000)
+	index := Select(data, 500000)
+	value := data[index]
+	sort.Stable(data)
+	expected := data[499999]
+	if value != expected {
+		t.Errorf("Expected: %v, Actual: %v\n%v", expected, value, data)
+	}
+}
+
+func TestSelectionWithSerialCase(t *testing.T) {
+	data := serialTestCase(100)
+	sort.Sort(sort.Reverse(data))
 	index := Select(data, 50)
 	value := data[index]
 	sort.Stable(data)
@@ -52,10 +78,90 @@ func randomTestCase(size int) testSlice {
 	return data
 }
 
-// func TestSomething(t *testing.T) {
-// 	data := testSlice{3, 5, 4, 3, 3, 1}
-// 	fmt.Println(data, Select(data, 3))
-// 	fmt.Println(data, Select(data, 2))
-// 	sort.Sort(data)
-// 	fmt.Printf("%v\n", data)
-// }
+func serialTestCase(size int) testSlice {
+	data := make(testSlice, 0, size)
+	for i := 0; i < size; i++ {
+		data = append(data, i)
+	}
+	return data
+}
+
+func BenchmarkSelectionMillion(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		data := make(testSlice, len(globalCaseMillion))
+		copy(data, globalCaseMillion)
+		b.StartTimer()
+		Select(data, len(globalCaseMillion))
+	}
+}
+
+func BenchmarkSortMillion(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		data := make(testSlice, len(globalCaseMillion))
+		copy(data, globalCaseMillion)
+		b.StartTimer()
+		sort.Sort(data)
+	}
+}
+
+func BenchmarkSelectionThousand(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		data := make(testSlice, len(globalCaseThousand))
+		copy(data, globalCaseThousand)
+		b.StartTimer()
+		Select(data, len(globalCaseThousand))
+	}
+}
+
+func BenchmarkSortThousand(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		data := make(testSlice, len(globalCaseThousand))
+		copy(data, globalCaseThousand)
+		b.StartTimer()
+		sort.Sort(data)
+	}
+}
+
+func BenchmarkSelectionHundred(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		data := make(testSlice, len(globalCaseHundred))
+		copy(data, globalCaseHundred)
+		b.StartTimer()
+		Select(data, len(globalCaseHundred))
+	}
+}
+
+func BenchmarkSortHundred(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		data := make(testSlice, len(globalCaseHundred))
+		copy(data, globalCaseHundred)
+		b.StartTimer()
+		sort.Sort(data)
+	}
+}
+
+func BenchmarkSelectionTens(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		data := make(testSlice, len(globalCaseTens))
+		copy(data, globalCaseTens)
+		b.StartTimer()
+		Select(data, len(globalCaseTens))
+	}
+}
+
+func BenchmarkSortTens(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		data := make(testSlice, len(globalCaseTens))
+		copy(data, globalCaseTens)
+		b.StartTimer()
+		sort.Sort(data)
+	}
+}
